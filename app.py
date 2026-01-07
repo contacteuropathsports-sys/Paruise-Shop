@@ -56,26 +56,36 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# --- CONNEXION HYBRIDE (PC & CLOUD) ---
+# --- 3. CONNEXION INTELLIGENTE (CLOUD & PC) ---
 @st.cache_resource
 def get_database():
     scope = ['https://www.googleapis.com/auth/spreadsheets', "https://www.googleapis.com/auth/drive"]
-    try:
-        # 1. Essaie de lire les secrets du Cloud (Streamlit)
-        import json
-        key_dict = dict(st.secrets["gcp_service_account"])
-        creds = ServiceAccountCredentials.from_json_keyfile_dict(key_dict, scope)
-    except:
-        # 2. Sinon, cherche le fichier local (Ton PC)
-        try:
-            creds = ServiceAccountCredentials.from_json_keyfile_name('credentials.json', scope)
-        except:
-            return None
     
-    client = gspread.authorize(creds)
-    return client.open("Data manager Paruise Shop")
-    except: return None
+    # 1. Essayer de se connecter via les Secrets Streamlit (Cloud)
+    try:
+        if "gcp_service_account" in st.secrets:
+            # On crée un dictionnaire à partir des secrets
+            key_dict = dict(st.secrets["gcp_service_account"])
+            creds = ServiceAccountCredentials.from_json_keyfile_dict(key_dict, scope)
+            client = gspread.authorize(creds)
+            return client.open("Data manager Paruise Shop")
+    except Exception as e:
+        pass # Si ça rate, on tente la méthode locale
 
+    # 2. Sinon, essayer le fichier local (Ton Ordinateur)
+    try:
+        import os
+        if os.path.exists('credentials.json'):
+            creds = ServiceAccountCredentials.from_json_keyfile_name('credentials.json', scope)
+            client = gspread.authorize(creds)
+            return client.open("Data manager Paruise Shop")
+    except:
+        pass
+
+    # Si rien ne marche
+    st.error("⛔ Erreur : Impossible de se connecter à Google Sheets (ni via Secrets, ni via JSON).")
+    return None
+    
 sh = get_database()
 if not sh: st.stop()
 

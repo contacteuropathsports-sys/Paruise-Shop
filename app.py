@@ -56,16 +56,24 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# --- 3. CONNEXION ---
+# --- CONNEXION HYBRIDE (PC & CLOUD) ---
 @st.cache_resource
 def get_database():
+    scope = ['https://www.googleapis.com/auth/spreadsheets', "https://www.googleapis.com/auth/drive"]
     try:
-        scope = ['https://www.googleapis.com/auth/spreadsheets', "https://www.googleapis.com/auth/drive"]
-        import os
-        if not os.path.exists('credentials.json'): return None
-        creds = ServiceAccountCredentials.from_json_keyfile_name('credentials.json', scope)
-        client = gspread.authorize(creds)
-        return client.open("Data manager Paruise Shop")
+        # 1. Essaie de lire les secrets du Cloud (Streamlit)
+        import json
+        key_dict = dict(st.secrets["gcp_service_account"])
+        creds = ServiceAccountCredentials.from_json_keyfile_dict(key_dict, scope)
+    except:
+        # 2. Sinon, cherche le fichier local (Ton PC)
+        try:
+            creds = ServiceAccountCredentials.from_json_keyfile_name('credentials.json', scope)
+        except:
+            return None
+    
+    client = gspread.authorize(creds)
+    return client.open("Data manager Paruise Shop")
     except: return None
 
 sh = get_database()

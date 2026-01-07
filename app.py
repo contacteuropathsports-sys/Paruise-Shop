@@ -15,77 +15,104 @@ st.set_page_config(page_title="Paruise Shop - L'Expérience", page_icon="👑", 
 SHOP_NAME = "Paruise Shop"
 SHOP_PHONE = "22893991499"
 
-# --- 2. STYLE "LUXE & ÉMOTION" ---
+# --- 2. STYLE "DARK LUXE" (SOMMEIL & OR) ---
 st.markdown("""
 <style>
-    /* Fond très légèrement teinté pour la douceur */
-    .stApp { background-color: #FAFAFA; color: #333333; }
+    /* FOND PRINCIPAL : NOIR PROFOND */
+    .stApp {
+        background-color: #0E1117;
+        color: #E0E0E0;
+    }
     
-    /* Sidebar Bordeaux Royal */
-    [data-testid="stSidebar"] { background-color: #6D071A; }
-    [data-testid="stSidebar"] * { color: #F9F9F9 !important; }
+    /* SIDEBAR : BORDEAUX SOMBRE */
+    [data-testid="stSidebar"] {
+        background-color: #4A0E19;
+    }
+    [data-testid="stSidebar"] * {
+        color: #F9F9F9 !important;
+    }
 
-    /* Titres avec Police Élégante */
-    h1, h2, h3 { color: #6D071A !important; font-family: 'Helvetica Neue', sans-serif; font-weight: 600; }
-    
-    /* BOUTONS D'ACTION (L'appel du clic) */
+    /* TITRES : OR ET BLANC */
+    h1, h2, h3 {
+        color: #FFFFFF !important;
+        font-family: 'Helvetica Neue', sans-serif;
+        font-weight: 600;
+    }
+    h1 span, h2 span, h3 span { color: #D4AF37 !important; }
+
+    /* BOUTONS D'ACTION (Bordeaux & Or) */
     .stButton>button {
-        background: linear-gradient(45deg, #6D071A, #900C22);
-        color: white; border: none; border-radius: 12px;
-        height: 55px; font-size: 18px; font-weight: bold;
-        box-shadow: 0 4px 15px rgba(109, 7, 26, 0.2);
+        background: linear-gradient(45deg, #800020, #5a0016);
+        color: white; 
+        border: 1px solid #D4AF37; 
+        border-radius: 12px;
+        height: 55px; 
+        font-size: 18px; 
+        font-weight: bold;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
         transition: transform 0.2s;
     }
-    .stButton>button:hover { transform: scale(1.02); }
-
-    /* LES ÉTAPES (Step 1, 2, 3) */
-    .step-box {
-        background-color: white; padding: 20px; border-radius: 15px;
-        border-left: 6px solid #D4AF37; /* Or */
-        box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin-bottom: 15px;
+    .stButton>button:hover { 
+        transform: scale(1.02); 
+        border-color: white;
     }
-    .step-title { font-size: 20px; font-weight: bold; color: #6D071A; margin-bottom: 10px; }
 
-    /* ALERTES DOUCES */
-    .success-msg { background-color: #E8F5E9; color: #2E7D32; padding: 15px; border-radius: 10px; border: 1px solid #A5D6A7; text-align: center; font-size: 18px;}
+    /* LES ÉTAPES (Step 1, 2, 3) - MODE SOMBRE */
+    .step-box {
+        background-color: #1E1E1E; /* Gris foncé */
+        padding: 20px; 
+        border-radius: 15px;
+        border-left: 6px solid #D4AF37; /* Or */
+        box-shadow: 0 4px 10px rgba(0,0,0,0.3); 
+        margin-bottom: 15px;
+        color: white;
+    }
+    .step-title { 
+        font-size: 20px; 
+        font-weight: bold; 
+        color: #D4AF37; /* Or */
+        margin-bottom: 10px; 
+    }
+
+    /* ALERTES (Adaptées au sombre) */
+    .success-msg { 
+        background-color: #1B5E20; /* Vert foncé */
+        color: #FFFFFF; 
+        padding: 15px; 
+        border-radius: 10px; 
+        border: 1px solid #4CAF50; 
+        text-align: center; 
+        font-size: 18px;
+    }
     
-    /* CHAMPS DE SAISIE PROPRES */
-    .stTextInput input, .stNumberInput input, .stSelectbox div {
-        background-color: white !important; border: 1px solid #E0E0E0; border-radius: 8px;
+    /* CHAMPS DE SAISIE (Fond Clair pour lisibilité maximale) */
+    .stTextInput input, .stNumberInput input, .stSelectbox div, .stDateInput input, .stTextArea textarea {
+        background-color: #F0F2F6 !important;
+        color: #000000 !important;
+        border-radius: 8px;
+        border: 1px solid #555;
+    }
+    
+    /* Texte dans les listes déroulantes */
+    div[data-baseweb="select"] > div {
+        background-color: #F0F2F6 !important;
+        color: black !important;
     }
 </style>
 """, unsafe_allow_html=True)
 
-# --- 3. CONNEXION INTELLIGENTE (CLOUD & PC) ---
+# --- 3. CONNEXION ---
 @st.cache_resource
 def get_database():
-    scope = ['https://www.googleapis.com/auth/spreadsheets', "https://www.googleapis.com/auth/drive"]
-    
-    # 1. Essayer de se connecter via les Secrets Streamlit (Cloud)
     try:
-        if "gcp_service_account" in st.secrets:
-            # On crée un dictionnaire à partir des secrets
-            key_dict = dict(st.secrets["gcp_service_account"])
-            creds = ServiceAccountCredentials.from_json_keyfile_dict(key_dict, scope)
-            client = gspread.authorize(creds)
-            return client.open("Data manager Paruise Shop")
-    except Exception as e:
-        pass # Si ça rate, on tente la méthode locale
-
-    # 2. Sinon, essayer le fichier local (Ton Ordinateur)
-    try:
+        scope = ['https://www.googleapis.com/auth/spreadsheets', "https://www.googleapis.com/auth/drive"]
         import os
-        if os.path.exists('credentials.json'):
-            creds = ServiceAccountCredentials.from_json_keyfile_name('credentials.json', scope)
-            client = gspread.authorize(creds)
-            return client.open("Data manager Paruise Shop")
-    except:
-        pass
+        if not os.path.exists('credentials.json'): return None
+        creds = ServiceAccountCredentials.from_json_keyfile_name('credentials.json', scope)
+        client = gspread.authorize(creds)
+        return client.open("Data manager Paruise Shop")
+    except: return None
 
-    # Si rien ne marche
-    st.error("⛔ Erreur : Impossible de se connecter à Google Sheets (ni via Secrets, ni via JSON).")
-    return None
-    
 sh = get_database()
 if not sh: st.stop()
 
@@ -108,12 +135,12 @@ def whatsapp_link(phone, msg):
     clean = str(phone).replace(" ", "").replace("+", "").replace(".", "").split(".")[0]
     return f"https://wa.me/{clean}?text={encoded}"
 
-# --- 5. NAVIGATION (ORDRE MIS À JOUR) ---
+# --- 5. NAVIGATION (ORDRE VALIDÉ) ---
 st.sidebar.image("https://cdn-icons-png.flaticon.com/512/3163/3163212.png", width=100)
 st.sidebar.markdown("### PARUISE SHOP")
-st.sidebar.caption("Petit message de David:j'ai passé une nuit blanche pour ça donc il faut utiliser ahan")
+st.sidebar.caption("L'Art de gérer son Empire")
 
-menu = st.sidebar.radio("MENU", [
+menu = st.sidebar.radio("NAVIGUER", [
     "🛒 Nouvelle Vente (Caisse)",
     "📦 Stock & Pépites",
     "💌 Clients & Amour",
@@ -188,7 +215,8 @@ if menu == "🛒 Nouvelle Vente (Caisse)":
     total = prix_final * qte
     benefice = (prix_final - p_achat) * qte
     
-    st.markdown(f"<h2 style='text-align:center; color:#6D071A'>TOTAL À PAYER : {total:,.0f} FCFA</h2>", unsafe_allow_html=True)
+    # Couleur Or pour être visible sur le noir
+    st.markdown(f"<h2 style='text-align:center; color:#D4AF37'>TOTAL À PAYER : {total:,.0f} FCFA</h2>", unsafe_allow_html=True)
     
     if st.button("✨ VALIDER LA VENTE ET FAIRE BRILLER ✨"):
         if final_client:
@@ -255,15 +283,14 @@ elif menu == "📦 Stock & Pépites":
         
         low = df_p[df_p["Stock_Actuel"] < 3]
         if not low.empty:
-            st.warning(f"⚠️ Attention Dagan, {len(low)} articles sont bientôt en rupture !")
+            st.warning(f"⚠️ Attention ma chérie, {len(low)} articles sont bientôt en rupture !")
             st.dataframe(low[["Nom_Article", "Stock_Actuel"]])
 
 # =============================================================================
-# 3. CLIENTS & AMOUR
+# 3. CLIENTS
 # =============================================================================
 elif menu == "💌 Clients & Amour":
     st.title("💌 Chouchoute tes Clientes")
-    
     df_v = load_data("VENTES")
     df_c = load_data("CLIENTS")
     
@@ -277,128 +304,105 @@ elif menu == "💌 Clients & Amour":
             st.info(f"🏆 {cli} : {val:,.0f} FCFA dépensés chez toi !")
             
         st.divider()
-        st.markdown("### 💌 Envoyer de l'amour (Message Perso)")
-        
+        st.markdown("### 💌 Envoyer de l'amour")
         dest = st.selectbox("Choisir une cliente", df_c["Nom_Client"].tolist() if not df_c.empty else [])
         if dest:
             tel = df_c[df_c["Nom_Client"]==dest].iloc[0]["Telephone"]
             prenom = str(dest).split(' ')[0]
-            
             msg_type = st.radio("Occasion :", ["Merci Spécial", "Relance Douce", "Anniversaire"])
             
-            if msg_type == "Merci Spécial":
-                txt = f"Coucou {prenom} ! ❤️ C'est Paruise. Je pensais à toi et je voulais juste te remercier d'être une cliente si fidèle. Passe me voir, j'ai un petit truc pour toi !"
-            elif msg_type == "Relance Douce":
-                txt = f"Toc toc {prenom} ! 👀 Ça fait longtemps qu'on n'a pas vu ton sourire à la boutique ! J'ai reçu des nouveautés qui t'iraient à merveille. Viens jeter un œil !"
-            else:
-                txt = f"Joyeux Anniversaire {prenom} ! 🎂🥳 Que du bonheur pour toi. Passe récupérer ton cadeau à la boutique (-20% aujourd'hui) ! Bisous."
+            if msg_type == "Merci Spécial": txt = f"Coucou {prenom} ! ❤️ Merci d'être une cliente si fidèle. Passe me voir pour un petit cadeau !"
+            elif msg_type == "Relance Douce": txt = f"Toc toc {prenom} ! 👀 J'ai reçu des nouveautés qui t'iraient à merveille. Viens jeter un œil !"
+            else: txt = f"Joyeux Anniversaire {prenom} ! 🎂🥳 Passe récupérer ton cadeau à la boutique (-20% aujourd'hui) !"
             
             lnk = whatsapp_link(tel, txt)
             st.markdown(f"<a href='{lnk}' target='_blank'><button style='background-color:#25D366; color:white; border:none; padding:10px; border-radius:5px;'>📲 Envoyer sur WhatsApp</button></a>", unsafe_allow_html=True)
 
 # =============================================================================
-# 4. MARKETING IMPACTANT
+# 4. MARKETING
 # =============================================================================
 elif menu == "📢 Marketing Impactant":
     st.title("📢 Fais du Bruit !")
-    st.markdown("Des textes prêts à l'emploi pour captiver ton audience.")
     
-    tab1, tab2 = st.tabs(["📘 Facebook (Storytelling)", "🎵 TikTok (Viral)"])
-    
-    prod = st.text_input("Quel produit veux-tu mettre en avant ?", "Cette Robe en Soie")
+    tab1, tab2 = st.tabs(["📘 Facebook", "🎵 TikTok"])
+    prod = st.text_input("Produit vedette", "Cette Robe en Soie")
     
     with tab1:
-        st.markdown("### L'Art de Raconter une Histoire")
+        st.markdown("### Storytelling Facebook")
         fb_txt = f"""🤫 JE NE DEVRAIS PAS VOUS MONTRER ÇA...
 
-Normalement, je garde les plus belles pièces pour mes clientes VIP.
-Mais quand j'ai ouvert le carton et vu {prod}... je n'ai pas pu résister.
+Quand j'ai ouvert le carton et vu {prod}... je n'ai pas pu résister.
+La coupe ? Parfaite. La matière ? Une caresse.
 
-La coupe ? Parfaite.
-La matière ? Une caresse sur la peau.
-L'effet ? "Wow" garanti.
-
-👑 Mes Reines de Wonyomé, vous méritez ce qu'il y a de mieux.
-Mais attention, je n'en ai que quelques pièces.
-
+👑 Mes Reines, attention, je n'en ai que quelques pièces.
 📍 Paruise Shop (Face Station Sanol)
-👇 Cliquez vite ici pour réserver la vôtre :
-https://wa.me/{SHOP_PHONE}"""
-        st.text_area("Copier ce texte :", fb_txt, height=300)
+👇 Cliquez vite ici : https://wa.me/{SHOP_PHONE}"""
+        st.text_area("Copier :", fb_txt, height=250)
 
     with tab2:
-        st.markdown("### Titres & Hashtags qui marchent")
-        st.info("🎵 Son recommandé : Une musique Afro tendance un peu douce.")
-        st.write("👉 **Titre vidéo :** 'Arrête de scroller si tu veux être la plus classe.'")
-        st.write("👉 **Action :** Transition claquement de doigts.")
-        st.code("#Lome #TogoFashion #ParuiseShop #Chic228 #Babi225 #OOTD")
+        st.markdown("### Titres TikTok")
+        st.info("🎵 Son : Afro tendance douce.")
+        st.code("Arrête de scroller si tu veux être la plus classe.")
+        st.code("#Lome #TogoFashion #ParuiseShop #Chic228 #OOTD")
 
 # =============================================================================
 # 5. DÉPENSES
 # =============================================================================
 elif menu == "💸 Dépenses (Sorties)":
     st.title("💸 Où va l'argent ?")
-    
     with st.form("dep"):
         d_date = st.date_input("Date", datetime.now())
-        d_cat = st.selectbox("Motif", ["Marchandise (Stock)", "Loyer Boutique", "Factures", "Transport", "Repas/Perso", "Épargne"])
+        d_cat = st.selectbox("Motif", ["Marchandise", "Loyer", "Factures", "Transport", "Perso", "Épargne"])
         d_montant = st.number_input("Montant", step=500)
-        d_desc = st.text_input("Petit détail")
+        d_desc = st.text_input("Détail")
         if st.form_submit_button("Noter la dépense"):
             try: sh.worksheet("DEPENSES").append_row([d_date.strftime("%d/%m/%Y"), d_cat, d_montant, d_desc])
             except: st.error("Crée l'onglet DEPENSES !")
             st.success("C'est noté. On surveille le budget !")
 
 # =============================================================================
-# 6. ÉVOLUTION BUDGET
+# 6. BUDGET
 # =============================================================================
 elif menu == "📈 Évolution du Budget":
     st.title("📈 La Vie de ton Argent")
-    st.markdown("Voici la vérité sur ton business : est-ce que ça monte ou ça descend ?")
-    
     df_v = load_data("VENTES")
     df_d = load_data("DEPENSES")
     
     data_points = []
     
-    # Préparation des Ventes (+)
     if not df_v.empty:
         col_t = "Total" if "Total" in df_v.columns else df_v.columns[5]
         for _, row in df_v.iterrows():
             try:
                 d = datetime.strptime(row.iloc[0], "%d/%m/%Y")
                 montant = clean_num(row[col_t])
-                data_points.append({"Date": d, "Montant": montant, "Type": "Vente"})
+                data_points.append({"Date": d, "Montant": montant})
             except: pass
             
-    # Préparation des Dépenses (-)
     if not df_d.empty:
         col_m = "Montant" if "Montant" in df_d.columns else df_d.columns[2]
         for _, row in df_d.iterrows():
             try:
                 d = datetime.strptime(row.iloc[0], "%d/%m/%Y")
                 montant = clean_num(row[col_m])
-                data_points.append({"Date": d, "Montant": -montant, "Type": "Dépense"}) # Négatif !
+                data_points.append({"Date": d, "Montant": -montant})
             except: pass
             
     if data_points:
         df_chart = pd.DataFrame(data_points).sort_values("Date")
-        # Le calcul magique : Somme cumulée
         df_chart["Caisse"] = df_chart["Montant"].cumsum()
         
-        # Le Graphique en Courbe
-        fig = px.area(df_chart, x="Date", y="Caisse", title="Évolution de ta Trésorerie (Cash Réel)",
-                      color_discrete_sequence=['#6D071A'])
-        
-        # Design pur
+        fig = px.area(df_chart, x="Date", y="Caisse", title="Trésorerie (Cash Réel)", color_discrete_sequence=['#D4AF37'])
+        # Graphique adapté au mode sombre
         fig.update_layout(
-            plot_bgcolor="white",
-            xaxis_showgrid=False,
-            yaxis_gridcolor='#F0F0F0'
+            plot_bgcolor="#1E1E1E", 
+            paper_bgcolor="#0E1117", 
+            font_color="white",
+            xaxis_showgrid=False, 
+            yaxis_gridcolor='#333'
         )
         st.plotly_chart(fig, use_container_width=True)
         
-        dernier_solde = df_chart.iloc[-1]["Caisse"]
-        st.markdown(f"<h3 style='text-align:center'>Solde actuel estimé : <span style='color:#D4AF37'>{dernier_solde:,.0f} FCFA</span></h3>", unsafe_allow_html=True)
+        st.markdown(f"<h3 style='text-align:center'>Solde actuel : <span style='color:#D4AF37'>{df_chart.iloc[-1]['Caisse']:,.0f} FCFA</span></h3>", unsafe_allow_html=True)
     else:
-        st.info("Pas encore assez de données pour tracer la courbe.")
+        st.info("Pas encore assez de données.")
